@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Exoplanet Weather</title>
+<style>
+:root{--ink:#fff;--bg:#05070f;--glass:rgba(255,255,255,.14);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#05070f}}
+:root[data-theme="dark"]{--bg:#05070f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,"SF Pro Display",system-ui,"Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea{font-family:inherit}
+button{border:0;color:#fff;cursor:pointer}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,.5)}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#app{max-width:430px;margin:0 auto}
+.scr{padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px;min-height:100vh}
+.top{display:flex;justify-content:space-between;align-items:center;padding:0 4px 4px}
+.top span{font-size:34px;font-weight:700}
+.plus{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.16);font-size:24px}
+.sec{font-size:12px;font-weight:600;letter-spacing:.6px;opacity:.55;padding:8px 4px 0;text-transform:uppercase}
+.card{padding:16px 18px;width:100%;text-align:left;border-radius:22px;display:flex;justify-content:space-between;align-items:flex-start;min-height:92px}
+.card .l{display:flex;flex-direction:column;gap:2px}
+.card .n{font-size:21px;font-weight:600}
+.card .w{font-size:13px;opacity:.75}
+.card .c{font-size:14px;margin-top:14px;opacity:.95}
+.card .r{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.card .tt{font-size:48px;font-weight:200;line-height:1}
+.card .tt.nf{font-size:15px;font-weight:500;line-height:1.2;max-width:120px;padding-top:8px}
+.card .hl{font-size:13px;margin-top:14px;opacity:.85}
+.fine{font-size:11px;opacity:.55;text-align:center;line-height:1.5;margin-top:4px}
+.sbar{display:flex;gap:10px;align-items:center}
+#q{flex:1;border:0;outline:0;background:rgba(255,255,255,.14);color:#fff;font-size:17px;padding:11px 14px;border-radius:12px}
+.cancel{background:none;font-size:17px}
+.res{width:100%;text-align:left;border-radius:16px;padding:13px 16px;background:rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.res b{font-size:17px;display:block}.res small{font-size:13px;opacity:.65}
+.res .a{font-size:14px;font-weight:600;opacity:.85}
+.none{font-size:15px;line-height:1.5;padding:18px 8px;opacity:.8;text-align:center}
+.det{position:relative;min-height:100vh;overflow:hidden}
+.disc{position:absolute;left:50%;top:30px;width:300px;height:300px;margin-left:-150px;border-radius:50%;opacity:.85}
+.streaks{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.streaks i{position:absolute;left:0;height:2px;border-radius:2px;animation:drift 1.5s linear infinite}
+@keyframes drift{from{transform:translate(-140px,0)}to{transform:translate(540px,46px)}}
+@media (prefers-reduced-motion:reduce){.streaks{display:none}}
+.dbody{position:relative;padding:18px 16px 28px}
+.back{background:rgba(255,255,255,.18);font-size:15px;padding:8px 14px;border-radius:99px}
+.hero{text-align:center;margin-top:18px;text-shadow:0 1px 12px rgba(0,0,0,.35)}
+.hero .n{font-size:32px;font-weight:500}
+.hero .big{font-size:96px;font-weight:200;line-height:1.05;margin-left:18px}
+.hero .big.nf{font-size:34px;font-weight:400;margin:30px 0 32px;line-height:1.1}
+.hero .c{font-size:20px;font-weight:500}.hero .hl{font-size:18px;font-weight:500;margin-top:2px}
+.stack{margin-top:120px;display:flex;flex-direction:column;gap:12px}
+.g{background:var(--glass);border-radius:22px;padding:14px 16px;-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+.lab{font-size:12px;font-weight:600;letter-spacing:.5px;opacity:.65;text-transform:uppercase}
+.g p{font-size:16px;line-height:1.35;margin:8px 0 0}
+.chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.chip{font-size:11px;padding:4px 9px;border-radius:99px;border:1px solid rgba(255,255,255,.7);text-transform:uppercase}
+.chip.f{background:#fff;color:#111;font-weight:600;border-color:#fff}
+.strip{display:flex;margin-top:14px;text-align:center}
+.strip div{flex:1;display:flex;flex-direction:column;gap:8px}
+.strip span:first-child{font-size:13px;opacity:.8}.strip span+span{font-size:20px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.two .v{font-size:26px;margin-top:8px}.two small{font-size:11px;opacity:.65;display:block;margin-top:2px}
+.seg{display:flex;gap:4px;background:rgba(0,0,0,.25);border-radius:99px;padding:3px}
+.seg button{font-size:12px;font-weight:600;padding:6px 11px;border-radius:99px;background:transparent}
+.seg button.on{background:rgba(255,255,255,.3)}
+.dh{display:flex;justify-content:space-between;align-items:center}
+.line{font-size:16px;line-height:1.4;margin-top:12px}
+textarea,.note{width:100%;background:rgba(0,0,0,.22);border:0;border-radius:12px;color:#fff;font-size:16px;padding:10px 12px;margin-top:10px;outline-offset:0}
+textarea{min-height:84px;resize:vertical}.note{font-size:13px}
+.acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{background:#fff;color:#111;border-radius:99px;padding:8px 16px;font-size:14px;font-weight:600}
+.btn.gh{background:rgba(255,255,255,.2);color:#fff}.btn[disabled]{opacity:.5}
+.msg{font-size:13px;opacity:.75;margin-top:8px}
+</style></head>
+<body><div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const NF="No forecast issued",U="Unknown",fx=n=>Number(n).toLocaleString("en-US");
+const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const S="Solar System";
+const D=[["Mercury",430,430,-180,"Scorching days, frozen nights","Surface alert","No atmosphere to hold heat, so the surface swings by about 600 degrees between day and night.","measured · temperature","measured · orbiter data","On the surface",[["Noon","430°"],["Night","-180°"],["Air","None"]],"#8d8478","88 days",.0553,.383],
+["Venus",465,465,465,"Hot, thick, acid clouds","Pressure advisory","Surface pressure is about 92 times Earth’s, under clouds of sulfuric acid. Hot enough to melt lead, day and night.","measured · surface","measured · landers","On the surface",[["Surface","465°"],["Pressure","92 bar"],["Clouds","Acid"]],"#c9923a","225 days",.815,.949],
+["Earth",15,57,-89,"Mild, with weather","For reference","The one world where we can check the forecast against the sky. Records shown are all-time extremes.","measured · climate","measured · stations","Records",[["Average","15°"],["Record high","57°"],["Record low","-89°"]],"#2f6fd1","365 days",1,1],
+["Mars",-63,20,-125,"Cold, dusty, thin air","Dust alert","Global dust storms can wrap the planet for weeks. The air is under 1% as dense as Earth’s.","measured · dust storms","measured · rovers","On the surface",[["Equator","20°"],["Winter pole","-125°"],["Pressure","0.6%"]],"#b5472b","687 days",.107,.532],
+["Jupiter",-110,-110,-110,"One storm, centuries long","Storm warning","The Great Red Spot has been tracked for well over a century. Winds reach roughly 600 km/h.","measured · storm","measured · cloud tops","Cloud tops",[["Temp","-110°"],["Winds","600 km/h"],["Surface","None"]],"#c08a5a","11.9 years",317.8,11.21],
+["Saturn",-139,-139,-139,"Six-sided storm at the pole","Polar watch","A hexagonal jet stream circles the north pole. Winds near the equator reach about 1,800 km/h.","measured · jet stream","measured · Cassini","Cloud tops",[["Temp","-139°"],["Winds","1,800 km/h"],["Surface","None"]],"#cdb27a","29.5 years",95.16,9.45],
+["Uranus",-195,-195,-224,"Tipped on its side","Cold advisory","The coldest planetary atmosphere measured, near -224°. Tilted about 98°, so each pole sees decades of sun, then decades of dark.","measured · temperature","measured · Voyager 2","Cloud tops",[["Temp","-195°"],["Coldest","-224°"],["Tilt","98°"]],"#5fc3c9","84 years",14.54,4.01],
+["Neptune",-201,-201,-201,"Supersonic wind, diamond rain?","Wind warning","The fastest winds in the Solar System, around 2,000 km/h. Diamond rain deep inside is predicted by models, never observed.","measured · wind","speculative · diamond rain","Cloud tops",[["Temp","-201°"],["Winds","2,000 km/h"],["Surface","None"]],"#3b5fd6","165 years",17.15,3.88,"rgba(190,245,255,.95)"]]
+.map(a=>({src:"ss",id:"s:"+a[0],name:a[0],t:a[1],hi:a[2],lo:a[3],cond:a[4],at:a[5],a:a[6],c1:a[7],c2:a[8],st:a[9],strip:a[10],h:a[11],yr:a[12],mass:a[13],rad:a[14],rain:a[15]}));
+let added=load("ew.worlds",[]);
+const st={v:"list",id:null,q:"",res:[],msg:"",none:false,tab:"draft",dmsg:"",dbusy:false};
+const all=()=>D.concat(added);
+const WX={"HD 189733 b":["Glass rain, sideways","Wind alert","Sustained winds near 8,700 km/h, dayside to nightside. Silicate glass particles expected to fall almost horizontally.","wind","modeled · glass rain","#2352b8","rgba(215,236,255,.95)"],
+"WASP-76 b":["Iron rain after dark","Evening forecast","Iron vaporizes on the dayside and is expected to condense and fall on the cooler nightside.","iron vapor","modeled · iron rain","#d4491a","rgba(255,175,95,.95)"],
+"WASP-121 b":["Water splitting apart","Dayside advisory","So hot that water molecules break into hydrogen and oxygen on the dayside, then recombine as air moves around.","dayside heat","modeled · chemistry","#b8325a"],
+"TRAPPIST-1 e":["Atmosphere unconfirmed","Outlook","Possibly temperate, but the atmosphere is unconfirmed. Treat this entire page as a guess.","orbit","speculative · climate","#2d8a8a"],
+"Proxima Cen b":["Possibly temperate","Flare watch","Our nearest exoplanet orbits a flare-prone star. Temperature is an estimate that assumes no atmosphere.","orbit","speculative · climate","#b4452e"],
+"55 Cnc e":["Lava world","Surface alert","Orbits so close that its dayside may be partly molten. Whether it holds an atmosphere is still debated.","orbit","modeled · surface","#e0561f"],
+"Kepler-452 b":["Earth-like orbit, unconfirmed","Outlook","Often called Earth’s cousin, but its size and makeup are uncertain. Treat this as a guess.","orbit","speculative · climate","#3f8f6a"],
+"LHS 1140 b":["Possible ocean world","Outlook","A rocky or water-rich world in a calm star’s habitable zone. The atmosphere is not confirmed.","orbit","speculative · climate","#3a7ab8"],
+"51 Peg b":["The first hot Jupiter","History","The first planet found around a Sun-like star, in 1995. Its temperature is an estimate from its orbit.","orbit","modeled · temperature","#c9a24a"]};
+const wx=p=>p.src==="exo"?WX[p.name]:null;
+const ramp=k=>k<150?"#9fc3e8":k<350?"#3a8f86":k<600?"#9b7f5c":k<1000?"#5a4a8a":k<1500?"#a8325e":"#e0561f";
+const eh=p=>p.src==="ss"?p.h:(wx(p)?wx(p)[5]:(p.eqt==null?"#5d667c":ramp(p.eqt)));
+const tC=p=>p.src==="ss"?p.t:(p.eqt==null?null:Math.round(p.eqt-273.15));
+const gE=p=>(p.mass!=null&&p.rad>0)?p.mass/(p.rad*p.rad):null;
+const gTxt=p=>gE(p)==null?U:gE(p).toFixed(1)+" g";
+const cm=(h,a)=>`color-mix(in srgb,${h} ${a}%,#000)`;
+const card=h=>`linear-gradient(160deg,${cm(h,40)},${cm(h,80)})`;
+const sky=h=>`linear-gradient(180deg,${cm(h,40)},${cm(h,80)} 50%,${cm(h,22)})`;
+const disc=h=>`radial-gradient(circle at 35% 30%,color-mix(in srgb,${h} 55%,#fff),${h} 55%,${cm(h,30)})`;
+const fmt=(x,d)=>Number(x).toPrecision(d||3).replace(/\.?0+$/,"");
+const ly=p=>p.pc>0?fmt(p.pc*3.26156,4):null;
+function toP(r){return{src:"exo",id:"x:"+r.pl_name,name:r.pl_name,host:r.hostname,eqt:r.pl_eqt,pc:r.sy_dist,mass:r.pl_bmasse,rad:r.pl_rade,per:r.pl_orbper,year:r.disc_year,method:r.discoverymethod}}
+const sub=p=>p.src==="ss"?S:(ly(p)?fx(ly(p))+" light-years":U)+" · "+(p.host||U);
+async function tap(q){const e=encodeURIComponent(q);
+ for(const u of["/api/tap?query="+e,"https://exoplanetarchive.ipac.caltech.edu/TAP/sync?format=json&query="+e]){try{const r=await fetch(u);if(!r.ok)continue;const j=await r.json();if(Array.isArray(j))return j}catch(e){}}
+ throw 0}
+const fc=id=>load("ew.fc."+id,{d:"",e:"",n:""});
+function listH(){
+ const c=p=>{const t=tC(p);return`<button class="card" style="background:${card(eh(p))}" data-open="${esc(p.id)}"><span class="l"><span class="n">${esc(p.name)}</span><span class="w">${esc(sub(p))}</span><span class="c">${esc(p.src==="ss"?p.cond:wx(p)?wx(p)[0]:(t==null?"Temperature not in the Archive":"Equilibrium temperature"))}</span></span><span class="r">${t==null?`<span class="tt nf">${NF}</span>`:`<span class="tt">${fx(t)}°</span>`}${p.src==="ss"?`<span class="hl">H:${fx(p.hi)}°  L:${fx(p.lo)}°</span>`:t==null?"":`<span class="hl">modeled</span>`}</span></button>`};
+ return`<div class="scr"><div class="top"><span>Worlds</span><button class="plus" data-search aria-label="Add a world">+</button></div><div class="sec">${S}</div>${D.map(c).join("")}<div class="sec">Beyond · Exoplanets</div>${added.length?added.map(c).join(""):`<div class="fine">Tap + to search the NASA Exoplanet Archive.</div>`}<div class="fine">°C · Solar System values are approximate. Exoplanet temperatures are modeled.</div></div>`}
+function searchH(){return`<div class="scr"><div class="sbar"><input id="q" type="search" value="${esc(st.q)}" placeholder="Search for a planet" autocomplete="off" aria-label="Search the NASA Exoplanet Archive"><button class="cancel" data-cancel>Cancel</button></div><div id="res"></div></div>`}
+function resH(){const r=st.res.map(p=>`<button class="res" data-add="${esc(p.id)}"><span><b>${esc(p.name)}</b><small>${esc(sub(p))}</small></span><span class="a">${added.some(a=>a.id===p.id)?"Added ✓":"Add"}</span></button>`).join("");
+ return r+(st.msg?`<div class="none">${esc(st.msg)}</div>`:"")}
+const draw=()=>{const e=$("#res");if(e)e.innerHTML=resH()};
+async function search(q){q=q.trim();st.q=q;if(q.length<2){st.res=[];st.msg="";return draw()}
+ st.msg="Searching the Archive…";draw();
+ const s=q.replace(/'/g,"''").toUpperCase();
+ try{st.res=(await tap(`select top 8 pl_name,hostname,pl_eqt,sy_dist,pl_bmasse,pl_rade,pl_orbper,disc_year,discoverymethod from pscomppars where upper(pl_name) like '%${s}%' order by pl_name`)).map(toP);
+  st.msg=st.res.length?"":`No data for “${q}”. We only forecast worlds we have real measurements for, and we will not make one up.`}
+ catch(e){st.res=[];st.msg="The NASA Exoplanet Archive can’t be reached from this page. Search needs the server function (/api/tap) on the host."}
+ draw()}
+function detailH(){
+ const p=all().find(x=>x.id===st.id);if(!p){st.v="list";return listH()}
+ const h=eh(p),t=tC(p),ex=p.src==="exo",f=fc(p.id),g=gTxt(p);
+ const rn=p.src==="ss"?p.rain:(wx(p)&&wx(p)[6]);let streaks="";if(rn)for(let i=0;i<18;i++)streaks+=`<i style="top:${40+(i*53)%430}px;width:${60+(i*17)%60}px;animation-duration:${(1.1+((i*7)%10)/8).toFixed(2)}s;animation-delay:${-((i*.43)%2.6).toFixed(2)}s;background:linear-gradient(90deg,transparent,${rn})"></i>`;
+ const chip=(s,i)=>`<span class="chip${i===0?" f":""}">${esc(s)}</span>`;
+ let alertH,stripH;
+ if(ex){const l=ly(p);
+  alertH=`<div class="lab">⚑ About this world</div><p>Orbits ${esc(p.host||U)}, ${l?fx(l)+" light-years":U+" light-years"} away. Discovery: ${p.year?esc(p.year)+(p.method?", by "+esc(p.method):""):U}.</p><div class="chips">${chip("measured · distance",0)}${chip("measured · discovery")}</div>`;const w=wx(p);if(w)alertH=`<div class="lab">⚑ ${esc(w[1])}</div><p>${esc(w[2])}</p><p style="font-size:13px;opacity:.75">Orbits ${esc(p.host||U)}${l?", "+fx(l)+" light-years away":""}.</p><div class="chips">${chip("measured · "+w[3],0)}${chip(w[4])}</div>`;
+  stripH=`<div class="lab">Estimate</div><div class="strip"><div><span>Temp</span><span>${t==null?U:fx(t)+"°"}</span></div><div><span>Radius</span><span>${p.rad>0?fmt(p.rad)+" R⊕":U}</span></div><div><span>Mass</span><span>${p.mass!=null?fmt(p.mass)+" M⊕":U}</span></div></div><div class="chips">${chip("modeled · equilibrium temperature")}${chip("measured · radius, mass")}${chip("speculative · color")}</div>`}
+ else{alertH=`<div class="lab">⚑ ${esc(p.at)}</div><p>${esc(p.a)}</p><div class="chips">${chip(p.c1,0)}${chip(p.c2)}</div>`;
+  stripH=`<div class="lab">${esc(p.st)}</div><div class="strip">${p.strip.map(x=>`<div><span>${esc(x[0])}</span><span>${esc(x[1])}</span></div>`).join("")}</div>`}
+ let desk="";
+ if(ex){const ed=st.tab==="edit",over=f.d&&f.e.trim()&&f.e.trim()!==f.d.trim();
+  desk=`<div class="g"><div class="dh"><span class="lab">Forecast desk</span><span class="seg"><button data-tab="draft" class="${ed?"":"on"}">AI draft</button><button data-tab="edit" class="${ed?"on":""}">Edited</button></span></div>
+  ${ed?`<textarea data-edit="${esc(p.id)}" placeholder="Write the forecast people will read" aria-label="Edited forecast">${esc(f.e)}</textarea><input class="note" data-note="${esc(p.id)}" value="${esc(f.n)}" placeholder="Editor’s note (why you changed it)" aria-label="Editor’s note">${over?`<div class="msg">Overruled by a person.</div>`:""}`
+  :`<div class="line">${f.d?esc(f.d):"No draft yet."}</div><div class="acts"><button class="btn" data-draft="${esc(p.id)}" ${st.dbusy?"disabled":""}>${st.dbusy?"Drafting…":"Draft with AI"}</button><button class="btn gh" data-use="${esc(p.id)}" ${f.d?"":"disabled"}>Use draft</button></div>${f.n?`<div class="msg">Editor’s note: ${esc(f.n)}</div>`:""}`}
+  ${st.dmsg?`<div class="msg">${esc(st.dmsg)}</div>`:""}<div class="chips"><span class="chip">speculative · forecast</span></div></div>`}
+ const yr=ex?(p.per!=null?fmt(p.per,2)+" days":U):p.yr;
+ return`<div class="det" style="background:${sky(h)}"><div class="disc" style="background:${disc(h)};box-shadow:0 0 110px ${h}"></div><div class="streaks">${streaks}</div><div class="dbody"><button class="back" data-back>‹ Worlds</button>
+ <div class="hero"><div class="n">${esc(p.name)}</div>${t==null?`<div class="big nf">${NF}</div>`:`<div class="big">${fx(t)}°</div>`}<div class="c">${esc(ex?(wx(p)?wx(p)[0]:t==null?"Temperature not in the Archive":"Equilibrium temperature · modeled"):p.cond)}</div>${ex?"":`<div class="hl">H:${fx(p.hi)}°  L:${fx(p.lo)}°</div>`}</div>
+ <div class="stack"><div class="g">${alertH}</div><div class="g">${stripH}</div>${desk}<div class="two"><div class="g"><div class="lab">Year</div><div class="v">${esc(yr)}</div><small>measured</small></div><div class="g"><div class="lab">Gravity</div><div class="v">${esc(g)}</div><small>${g===U?"needs mass and radius":"modeled from mass and radius"}</small></div></div>
+ ${ex?`<div class="acts"><button class="btn gh" data-rm="${esc(p.id)}">Remove from Worlds</button></div>`:""}
+ <div class="fine">Artist-style render, not a photograph. Exoplanet colors are speculative estimates. Measured: observed. Modeled: calculated. Speculative: an informed guess.</div></div></div></div>`}
+function render(){$("#app").innerHTML=st.v==="detail"?detailH():st.v==="search"?searchH():listH();
+ if(st.v==="search"){const q=$("#q");q.addEventListener("input",e=>{clearTimeout(window.tm);const v=e.target.value;window.tm=setTimeout(()=>search(v),350)});draw();q.focus()}}
+async function viaApi(facts){const r=await fetch("/api/draft",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({facts})});if(!r.ok)throw{code:"none"};return await r.json()}
+async function draft(id){const p=all().find(x=>x.id===id);st.dmsg="";st.dbusy=true;render();
+ try{const s=window.claude?await claude.use("sample"):null;
+  const facts=[`Planet: ${p.name}`,p.host?`Host star: ${p.host}`:"",p.eqt!=null?`Equilibrium temperature (modeled): ${tC(p)} °C`:"Temperature: none available, so say no forecast can be issued",p.rad>0?`Radius: ${fmt(p.rad)} Earth radii`:"",p.mass!=null?`Mass: ${fmt(p.mass)} Earth masses`:"",gE(p)!=null?`Surface gravity (derived): ${gE(p).toFixed(2)} g`:"",ly(p)?`Distance: ${ly(p)} light-years`:"",wx(p)?`Published weather claim (modeled): ${wx(p)[2]}`:""].filter(Boolean).join("\n");
+  const r=s?await s(`Write ONE sentence, 30 words at most, in the voice of a weather presenter forecasting conditions on an exoplanet. Use only the facts below and invent no numbers. Treat it as speculation and do not state clouds, rain or wind as fact. Reply with the sentence only.\n${facts}`,{modelTier:"quick",cache:false}):await viaApi(facts);
+  const f=fc(id);f.d=r.text.trim();if(!f.e)f.e=f.d;save("ew.fc."+id,f)}
+ catch(e){st.dmsg=e&&e.code==="not_granted"?"AI drafting was not allowed. You can still write the forecast yourself in Edited.":e&&e.code==="rate_limited"?"Too many requests. Try again in a moment.":"AI drafting isn’t available in this view. You can still write the forecast yourself in Edited."}
+ st.dbusy=false;render()}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+ if(d.open){st.v="detail";st.id=d.open;st.tab="draft";st.dmsg="";scrollTo(0,0);render()}
+ else if("back" in d){st.v="list";render()}
+ else if("search" in d){st.v="search";st.q="";st.res=[];st.msg="";render()}
+ else if("cancel" in d){st.v="list";render()}
+ else if(d.add){const p=st.res.find(x=>x.id===d.add);if(p&&!added.some(a=>a.id===p.id)){added.push(p);save("ew.worlds",added)}st.v="list";render()}
+ else if(d.rm){added=added.filter(a=>a.id!==d.rm);save("ew.worlds",added);st.v="list";render()}
+ else if(d.tab){st.tab=d.tab;render()}
+ else if(d.draft)draft(d.draft);
+ else if(d.use){const f=fc(d.use);f.e=f.d;save("ew.fc."+d.use,f);st.tab="edit";render()}});
+document.addEventListener("input",e=>{const t=e.target.dataset||{};if(t.edit){const f=fc(t.edit);f.e=e.target.value;save("ew.fc."+t.edit,f)}if(t.note){const f=fc(t.note);f.n=e.target.value;save("ew.fc."+t.note,f)}});
+render();
+</script></body></html>

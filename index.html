@@ -146,11 +146,11 @@ function detailH(){
  else{alertH=`<div class="lab">⚑ ${esc(p.at)}</div><p>${esc(p.a)}</p><div class="chips">${chip(p.c1,0)}${chip(p.c2)}</div>`;
   stripH=`<div class="lab">${esc(p.st)}</div><div class="strip">${p.strip.map(x=>`<div><span>${esc(x[0])}</span><span>${esc(x[1])}</span></div>`).join("")}</div>`}
  let desk="";
- if(ex){const ed=st.tab==="edit",over=f.d&&f.e.trim()&&f.e.trim()!==f.d.trim();
-  desk=`<div class="g"><div class="dh"><span class="lab">Forecast desk</span><span class="seg"><button data-tab="draft" class="${ed?"":"on"}">AI draft</button><button data-tab="edit" class="${ed?"on":""}">Edited</button></span></div>
-  ${ed?`<textarea data-edit="${esc(p.id)}" placeholder="Write the forecast people will read" aria-label="Edited forecast">${esc(f.e)}</textarea><input class="note" data-note="${esc(p.id)}" value="${esc(f.n)}" placeholder="Editor’s note (why you changed it)" aria-label="Editor’s note">${over?`<div class="msg">Overruled by a person.</div>`:""}`
-  :`<div class="line">${f.d?esc(f.d):"No draft yet."}</div><div class="acts"><button class="btn" data-draft="${esc(p.id)}" ${st.dbusy?"disabled":""}>${st.dbusy?"Drafting…":"Draft with AI"}</button><button class="btn gh" data-use="${esc(p.id)}" ${f.d?"":"disabled"}>Use draft</button></div>${f.n?`<div class="msg">Editor’s note: ${esc(f.n)}</div>`:""}`}
-  ${st.dmsg?`<div class="msg">${esc(st.dmsg)}</div>`:""}<div class="chips"><span class="chip">speculative · forecast</span></div></div>`}
+ const ed=st.tab==="edit",over=f.d&&f.e.trim()&&f.e.trim()!==f.d.trim();
+ desk=`<div class="g"><div class="dh"><span class="lab">Forecast desk</span><span class="seg"><button data-tab="draft" class="${ed?"":"on"}">AI draft</button><button data-tab="edit" class="${ed?"on":""}">Edited</button></span></div>
+ ${ed?`<textarea data-edit="${esc(p.id)}" placeholder="Write the forecast people will read" aria-label="Edited forecast">${esc(f.e)}</textarea><input class="note" data-note="${esc(p.id)}" value="${esc(f.n)}" placeholder="Editor’s note (why you changed it)" aria-label="Editor’s note">${over?`<div class="msg">Overruled by a person.</div>`:""}`
+ :`<div class="line">${f.d?esc(f.d):"No draft yet."}</div><div class="acts"><button class="btn" data-draft="${esc(p.id)}" ${st.dbusy?"disabled":""}>${st.dbusy?"Drafting…":"Draft with AI"}</button><button class="btn gh" data-use="${esc(p.id)}" ${f.d?"":"disabled"}>Use draft</button></div>${f.n?`<div class="msg">Editor’s note: ${esc(f.n)}</div>`:""}`}
+ ${st.dmsg?`<div class="msg">${esc(st.dmsg)}</div>`:""}<div class="chips"><span class="chip">speculative · forecast</span></div></div>`;
  const yr=ex?(p.per!=null?fmt(p.per,2)+" days":U):p.yr;
  return`<div class="det" style="background:${sky(h)}"><div class="disc" style="background:${disc(h)};box-shadow:0 0 110px ${h}"></div><div class="streaks">${streaks}</div><div class="dbody"><button class="back" data-back>‹ Worlds</button>
  <div class="hero"><div class="n">${esc(p.name)}</div>${t==null?`<div class="big nf">${NF}</div>`:`<div class="big">${fx(t)}°</div>`}<div class="c">${esc(ex?(wx(p)?wx(p)[0]:t==null?"Temperature not in the Archive":"Equilibrium temperature · modeled"):p.cond)}</div>${ex?"":`<div class="hl">H:${fx(p.hi)}°  L:${fx(p.lo)}°</div>`}</div>
@@ -160,13 +160,63 @@ function detailH(){
 function render(){$("#app").innerHTML=st.v==="detail"?detailH():st.v==="search"?searchH():listH();
  if(st.v==="search"){const q=$("#q");q.addEventListener("input",e=>{clearTimeout(window.tm);const v=e.target.value;window.tm=setTimeout(()=>search(v),350)});draw();q.focus()}}
 async function viaApi(facts){const r=await fetch("/api/draft",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({facts})});if(!r.ok)throw{code:"none"};return await r.json()}
-async function draft(id){const p=all().find(x=>x.id===id);st.dmsg="";st.dbusy=true;render();
- try{const s=window.claude?await claude.use("sample"):null;
-  const facts=[`Planet: ${p.name}`,p.host?`Host star: ${p.host}`:"",p.eqt!=null?`Equilibrium temperature (modeled): ${tC(p)} °C`:"Temperature: none available, so say no forecast can be issued",p.rad>0?`Radius: ${fmt(p.rad)} Earth radii`:"",p.mass!=null?`Mass: ${fmt(p.mass)} Earth masses`:"",gE(p)!=null?`Surface gravity (derived): ${gE(p).toFixed(2)} g`:"",ly(p)?`Distance: ${ly(p)} light-years`:"",wx(p)?`Published weather claim (modeled): ${wx(p)[2]}`:""].filter(Boolean).join("\n");
-  const r=s?await s(`Write ONE sentence, 30 words at most, in the voice of a weather presenter forecasting conditions on an exoplanet. Use only the facts below and invent no numbers. Treat it as speculation and do not state clouds, rain or wind as fact. Reply with the sentence only.\n${facts}`,{modelTier:"quick",cache:false}):await viaApi(facts);
-  const f=fc(id);f.d=r.text.trim();if(!f.e)f.e=f.d;save("ew.fc."+id,f)}
- catch(e){st.dmsg=e&&e.code==="not_granted"?"AI drafting was not allowed. You can still write the forecast yourself in Edited.":e&&e.code==="rate_limited"?"Too many requests. Try again in a moment.":"AI drafting isn’t available in this view. You can still write the forecast yourself in Edited."}
- st.dbusy=false;render()}
+
+function generateFunForecast(p, t, g) {
+  const tCVal = t !== null ? t : 0;
+  const outfitTips = [
+    tCVal > 400 ? "Wear a titanium-reinforced pressure suit or melt instantly." :
+    tCVal > 100 ? "Heavy heat insulation required. Leave flammable apparel in orbit." :
+    tCVal < -150 ? "Bring an electric heater and three pairs of thermal wool socks." :
+    "Standard space suit recommended. UV protection level 9000.",
+    g > 3 ? `Gravity is ${g.toFixed(1)}x Earth's. Expect to feel like an anvil.` :
+    g < 0.5 ? "Low gravity warning: Watch your step or risk bouncing into orbit." :
+    "Gravity feels relatively normal, but don't drop your ice cream."
+  ];
+
+  const weatherAlerts = [
+    tCVal > 300 ? "High chance of supersonic metal vapor showers today." :
+    tCVal < -100 ? "Brisk atmospheric breeze with frozen methane slush." :
+    "Moderate radiation gusts with clear skies near the equator.",
+    p.name.includes("HD 189733") ? "Glass rain falling sideways at 5,000 mph. Keep windows closed." :
+    p.name.includes("WASP-76") ? "Liquid iron rain starting around dusk. Bring a steel umbrella." :
+    "Atmospheric composition is mostly hazardous. Do not inhale."
+  ];
+
+  const randomOutfit = outfitTips[Math.floor(Math.random() * outfitTips.length)];
+  const randomAlert = weatherAlerts[Math.floor(Math.random() * weatherAlerts.length)];
+  return `Forecast for ${p.name}: ${randomAlert} Outfit Advisory: ${randomOutfit}`;
+}
+
+async function draft(id){
+ const p=all().find(x=>x.id===id);st.dmsg="";st.dbusy=true;render();
+ const tVal=tC(p);const gVal=gE(p)||1;
+ try{
+  const apiKey=localStorage.getItem("gemini_api_key");
+  if(apiKey){
+   const prompt=`Write a short, funny, 2-sentence Apple Weather style forecast and outfit advice for planet ${p.name}. Stats: Temp: ${tVal!==null?tVal+'°C':'Unknown'}, Gravity: ${gVal.toFixed(1)}g. Keep it deadpan, humorous, sci-fi themed, and under 35 words. Mention ridiculous survival tips or what to wear.`;
+   const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+   });
+   const data=await res.json();
+   const aiText=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+   if(aiText){
+    const f=fc(id);f.d=aiText.trim();if(!f.e)f.e=f.d;save("ew.fc."+id,f);
+    st.dbusy=false;render();return;
+   }
+  }
+  try{
+   const facts=`Planet: ${p.name}, Temp: ${tVal}C, Gravity: ${gVal}g`;
+   const r=await viaApi(facts);
+   if(r&&r.text){const f=fc(id);f.d=r.text.trim();if(!f.e)f.e=f.d;save("ew.fc."+id,f);st.dbusy=false;render();return;}
+  }catch(e){}
+  const f=fc(id);f.d=generateFunForecast(p,tVal,gVal);if(!f.e)f.e=f.d;save("ew.fc."+id,f);
+ }catch(e){
+  st.dmsg="Unable to generate forecast.";
+ }
+ st.dbusy=false;render();
+}
+
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
  if(d.open){st.v="detail";st.id=d.open;st.tab="draft";st.dmsg="";scrollTo(0,0);render()}
  else if("back" in d){st.v="list";render()}
